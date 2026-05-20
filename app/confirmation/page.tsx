@@ -1,7 +1,20 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
 
 export default function ConfirmationPage() {
+  const [pointsEarned, setPointsEarned] = useState<number | null>(null);
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem("sah_points_earned");
+    if (raw) {
+      const pts = parseInt(raw, 10);
+      if (!isNaN(pts) && pts > 0) setPointsEarned(pts);
+      sessionStorage.removeItem("sah_points_earned");
+    }
+  }, []);
   return (
     <div className="min-h-screen bg-[#FFF8F0] flex items-center justify-center px-4 py-16">
       <div className="max-w-md w-full text-center">
@@ -16,10 +29,23 @@ export default function ConfirmationPage() {
         <h1 className="font-heading text-3xl sm:text-4xl font-bold text-[#6B1E2E] mb-3">
           Order Received! 🎉
         </h1>
-        <p className="text-gray-500 text-base leading-relaxed mb-8 max-w-sm mx-auto">
+        <p className="text-gray-500 text-base leading-relaxed mb-6 max-w-sm mx-auto">
           Your order has been received! We&apos;ll contact you shortly to confirm
           your delivery details and estimated arrival time.
         </p>
+
+        {/* Points earned banner */}
+        {pointsEarned !== null && (
+          <div className="bg-[#C9973A]/10 border border-[#C9973A]/30 rounded-2xl p-4 mb-6 flex items-center gap-3">
+            <span className="text-3xl">🌟</span>
+            <div className="text-left">
+              <p className="font-bold text-[#6B1E2E] text-sm">You earned {pointsEarned} points!</p>
+              <Link href="/profile" className="text-xs text-[#C9973A] underline font-medium">
+                View your profile →
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* WhatsApp notification card */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#F0E4D8] mb-8 text-left">

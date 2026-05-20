@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/context/cart-context";
+import { useAuth } from "@/context/auth-context";
+import { LogIn } from "lucide-react";
 import {
   User,
   Phone,
@@ -21,6 +23,7 @@ import {
 export default function CheckoutPage() {
   const { state, totalPrice, totalItems, updateQuantity, clearCart } =
     useCart();
+  const { state: authState, saveOrder } = useAuth();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -43,6 +46,27 @@ export default function CheckoutPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!authState.user) return; // gate enforced by UI, extra safety
+    const deliveryFee = form.fulfillment === "delivery" ? 1500 : 0;
+    const total = totalPrice + deliveryFee;
+    if (authState.user) {
+      const pts = saveOrder({
+        items: state.items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+        subtotal: totalPrice,
+        deliveryFee,
+        total,
+        fulfillment: form.fulfillment as "delivery" | "carryout",
+      });
+      sessionStorage.setItem("sah_points_earned", pts.toString());
+    } else {
+      sessionStorage.removeItem("sah_points_earned");
+    }
     clearCart();
     router.push("/confirmation");
   };
@@ -89,6 +113,37 @@ export default function CheckoutPage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 -mt-10">
+        {/* Login gate — shown when user is not signed in */}
+        {!authState.user && (
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E0D0C0] mb-4">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-[#C9973A]/15 rounded-xl flex items-center justify-center flex-shrink-0">
+                <LogIn className="w-6 h-6 text-[#C9973A]" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-heading font-bold text-[#6B1E2E] text-base mb-1">
+                  Sign in to complete your order
+                </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Create a free account or sign in to place orders and earn reward points you can redeem for{" "}
+                  <span className="font-semibold text-[#6B1E2E]">free meals &amp; drinks</span>.
+                </p>
+                <div className="flex gap-3">
+                  <Link href="/login?redirect=/checkout">
+                    <button className="bg-[#6B1E2E] text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-[#4A1520] transition-colors">
+                      Sign In
+                    </button>
+                  </Link>
+                  <Link href="/signup?redirect=/checkout">
+                    <button className="border border-[#6B1E2E] text-[#6B1E2E] text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-[#6B1E2E]/5 transition-colors">
+                      Create Account
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Order Summary */}
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#F0E4D8]">
@@ -409,9 +464,10 @@ export default function CheckoutPage() {
           {form.fulfillment && (
             <button
               type="submit"
-              className="w-full bg-[#6B1E2E] text-white font-bold py-4 rounded-2xl text-base hover:bg-[#4A1520] active:scale-[0.98] transition-all shadow-xl shadow-[#6B1E2E]/25"
+              disabled={!authState.user}
+              className="w-full bg-[#6B1E2E] text-white font-bold py-4 rounded-2xl text-base hover:bg-[#4A1520] active:scale-[0.98] transition-all shadow-xl shadow-[#6B1E2E]/25 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
             >
-              Place Order →
+              {authState.user ? "Place Order →" : "Sign In to Place Order"}
             </button>
           )}
         </form>

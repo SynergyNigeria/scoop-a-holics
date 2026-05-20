@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/cart-context";
+import { AuthProvider } from "@/context/auth-context";
 import Navbar from "@/components/navbar";
 import CartDrawer from "@/components/cart-drawer";
 
@@ -34,11 +35,13 @@ export default function RootLayout({
       className={`${playfairDisplay.variable} ${dmSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#FFF8F0]">
-        <CartProvider>
-          <Navbar />
-          <CartDrawer />
-          <main className="pt-16">{children}</main>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <Navbar />
+            <CartDrawer />
+            <main className="pt-16">{children}</main>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

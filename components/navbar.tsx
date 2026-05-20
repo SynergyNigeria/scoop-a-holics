@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Menu } from "lucide-react";
+import { ShoppingCart, Menu, UserCircle } from "lucide-react";
 import { useCart } from "@/context/cart-context";
+import { useAuth } from "@/context/auth-context";
 
 export default function Navbar() {
   const { totalItems, toggleCart } = useCart();
+  const { state: authState } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#6B1E2E] shadow-md">
@@ -33,8 +35,15 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Right — cart icon */}
-        <div className="flex items-center justify-end">
+        {/* Right — user icon + cart icon */}
+        <div className="flex items-center justify-end gap-1">
+          <Link
+            href={authState.user ? "/profile" : "/login"}
+            className="p-2 text-white/80 hover:text-[#C9973A] transition-colors"
+            aria-label="Profile"
+          >
+            <UserCircle className="w-6 h-6" />
+          </Link>
           <button
             onClick={toggleCart}
             className="relative p-2 text-white/80 hover:text-[#C9973A] transition-colors"
